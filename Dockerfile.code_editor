@@ -1,0 +1,7 @@
+FROM python:3.8.2-slim
+ARG PIP_LIBRARIES
+ARG JUPYTER_TOKEN
+RUN pip install notebook
+RUN pip install $PIP_LIBRARIES
+WORKDIR /home
+CMD jupyter-notebook --NotebookApp.token=$JUPYTER_TOKEN --port=8888 --allow-root

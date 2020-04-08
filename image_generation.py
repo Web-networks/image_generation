@@ -1,7 +1,6 @@
 import re
-from typing import List
+from typing import List, BinaryIO
 import sys
-import io
 import json
 
 import docker
@@ -66,24 +65,17 @@ def remove_default_dependencies(dependencies: List[str]) -> List[str]:
     ))
 
 
-def create_dockerfile(dependencies: List[str], base_image: str) -> str:
-    """
-        :paran dependencies - list of modules to install
-        :return dockerfile for image with installed dependencies
-
-    """
-
-    dockerfile = "FROM {}\n".format(base_image)
-    if dependencies:
-        dockerfile += "RUN pip install {}\n".format(", ".join(dependencies))
-    return dockerfile
-
-
-def build_image(client: docker.api.client.APIClient,
-                dockerfile: str, tag: str) -> docker.models.images.Image:
+def build_image(client: docker.api.client.APIClient, dockerfile: BinaryIO,
+                pip_libraties: List[str], jupyter_token: str, 
+                tag: str) -> docker.models.images.Image:
+    print(" ".join(pip_libraries))
     image, logs = client.images.build(
-        fileobj=io.BytesIO(dockerfile.encode("utf-8")),
-        encoding="utf-8",
+        fileobj=dockerfile,
+        buildargs={
+            "PIP_LIBRARIES": " ".join(pip_libraries),
+            "JUPYTER_TOKEN": jupyter_token,
+        },
+        encoding="urf-8",
         rm=True,
         forcerm=True,
         tag=tag
@@ -94,16 +86,25 @@ def build_image(client: docker.api.client.APIClient,
 
 
 if __name__ == '__main__':
-    file_content = sys.stdin.read()
-    dependencies = parse_dependencies(file_content)
-    check_for_restricted_dependencies(file_content)
-    dependencies = remove_default_dependencies(dependencies)
-    dockerfile = create_dockerfile(dependencies, "python:3.8.2-slim")
+    pip_libraries = ["numpy", "flask"]
+    check_for_restricted_dependencies(pip_libraries)
+    pip_libraries = remove_default_dependencies(pip_libraries)
     # tag will be set as some id from storage later
     client = docker.from_env()
     tag = "testimage"
-    image = build_image(client, dockerfile, tag)
+    with open("Dockerfile.code_editor", "rb") as dockerfile:
+        image = build_image(
+            client, 
+            dockerfile, 
+            pip_libraries,
+            "abcde",
+            tag
+        )
     # docker.push(regisry_host, tag)
 
     # test it
-    print(client.containers.run(tag, 'python -c "{}"'.format(file_content)))
+    client.containers.run(
+        tag, 
+        network="host",
+        ports={"8888": "8888"}
+    )
