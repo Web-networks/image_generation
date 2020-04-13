@@ -66,14 +66,12 @@ def remove_default_dependencies(dependencies: List[str]) -> List[str]:
 
 
 def build_image(client: docker.api.client.APIClient, dockerfile: BinaryIO,
-                pip_libraties: List[str], jupyter_token: str, 
+                pip_libraties: List[str],
                 tag: str) -> docker.models.images.Image:
-    print(" ".join(pip_libraries))
     image, logs = client.images.build(
         fileobj=dockerfile,
         buildargs={
             "PIP_LIBRARIES": " ".join(pip_libraries),
-            "JUPYTER_TOKEN": jupyter_token,
         },
         encoding="urf-8",
         rm=True,
@@ -97,7 +95,6 @@ if __name__ == '__main__':
             client, 
             dockerfile, 
             pip_libraries,
-            "abcde",
             tag
         )
     # docker.push(regisry_host, tag)
@@ -106,5 +103,6 @@ if __name__ == '__main__':
     client.containers.run(
         tag, 
         network="host",
+        environment={"JUPYTER_TOKEN": "abcd"},
         ports={"8888": "8888"}
     )

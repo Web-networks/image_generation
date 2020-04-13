@@ -1,6 +1,6 @@
 FROM python:3.8.2-slim
 ARG PIP_LIBRARIES
-ARG JUPYTER_TOKEN
+ENV JUPYTER_TOKEN ""
 RUN pip install notebook
 RUN pip install $PIP_LIBRARIES
 WORKDIR /home
