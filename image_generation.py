@@ -7,8 +7,8 @@ import docker
 
 import module_lists
 
-TAG_NAME = "jupyter"
 REGISTRY_HOST = "networksidea/image_generation"
+TAG_NAME = "jupyter-1.0.5"
 
 def parse_dependencies(file_content: str) -> List[str]:
     """
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     # tag will be set as some id from storage later
     client = docker.from_env()
     tag = f"{REGISTRY_HOST}:{TAG_NAME}"
-    with open("Dockerfile.code_editor", "rb") as dockerfile:
+    with open("code_editor.Dockerfile", "rb") as dockerfile:
         image = build_image(
             client, 
             dockerfile, 
