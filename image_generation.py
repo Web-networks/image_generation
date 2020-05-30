@@ -1,12 +1,14 @@
-import re
-from typing import List, BinaryIO
-import sys
 import json
+import re
+import sys
+from typing import BinaryIO, List
 
 import docker
 
 import module_lists
 
+REGISTRY_HOST = "networksidea/image_generation"
+TAG_NAME = "jupyter-1.0.5"
 
 def parse_dependencies(file_content: str) -> List[str]:
     """
@@ -89,20 +91,21 @@ if __name__ == '__main__':
     pip_libraries = remove_default_dependencies(pip_libraries)
     # tag will be set as some id from storage later
     client = docker.from_env()
-    tag = "testimage"
-    with open("Dockerfile.code_editor", "rb") as dockerfile:
+    tag = f"{REGISTRY_HOST}:{TAG_NAME}"
+    with open("code_editor.Dockerfile", "rb") as dockerfile:
         image = build_image(
             client, 
             dockerfile, 
             pip_libraries,
             tag
         )
-    # docker.push(regisry_host, tag)
+
+    client.images.push(REGISTRY_HOST, TAG_NAME)
 
     # test it
-    client.containers.run(
-        tag, 
-        network="host",
-        environment={"JUPYTER_TOKEN": "abcd"},
-        ports={"8888": "8888"}
-    )
+    # client.containers.run(
+    #     tag,
+    #     network="host",
+    #     environment={"JUPYTER_TOKEN": "abcd"},
+    #     ports={"8888": "8888"}
+    # )
